@@ -119,6 +119,20 @@ function displayMod(mod, i) {
         addCustomLocationElem(customLocation, j, i)
     }
 
+    let changes = []
+    if (mod.content.Changes) changes = mod.content.Changes
+    body.innerHTML += `<h1>Changes</h1>`
+    body.innerHTML += `<div id="changes"></div>`
+    body.innerHTML += `<button onclick="addEditImageChange(${i})">Add EditImage Change</button>`
+
+    for (let j = 0; j < changes.length; j++) {
+        let change = changes[j];
+
+        console.log(change)
+
+        addEditImageChangeElem(change, j, i)
+    }
+
     body.innerHTML += `<br>`
     body.innerHTML += `<button class="export" onclick="exportMod(${i})">Export Mod</button>`
 
@@ -148,11 +162,38 @@ function addCustomLocation(index) {
     }
 
     mods[index].content.CustomLocations.push(customLocation)
-    let option = document.createElement('option')
-    option.setAttribute('value', customLocation.Name)
-    option.innerHTML = customLocation.Name
+    // let option = document.createElement('option')
+    // option.setAttribute('value', customLocation.Name)
+    // option.innerHTML = customLocation.Name
     
-    assetDropdown.appendChild(option)
+    // assetDropdown.appendChild(option)
+    updateData()
+}
+
+function addEditImageChange(index) {
+    let editImageChange = {
+        Action: 'EditImage',
+        Target: 'Choose target',
+        FromFile: 'Choose asset',
+    }
+    addEditImageChangeElem(editImageChange, index, index)
+
+    let assetDropdown = document.querySelector(`.assetDropdown[data-index="${index}"]`)
+
+    // let changeDropdown = document.querySelector(`.changeDropdown[data-index="${index}]`)
+    // editImageChange.Target = changeDropdown.value
+
+    if (!mods[index].content.Changes) {
+        mods[index].content.Changes = []
+        updateData()
+    }
+
+    mods[index].content.Changes.push(editImageChange)
+    // let option = document.createElement('option')
+    // option.setAttribute('value', editImageChange.FromFile)
+    // option.innerHTML = editImageChange.FromFile
+
+    // assetDropdown.appendChild(option)
     updateData()
 }
 
@@ -165,7 +206,7 @@ function addCustomLocationElem(customLocation, j, i) {
     let customLocationNameElement = document.createElement('input')
     customLocationNameElement.setAttribute('type', 'text')
     customLocationNameElement.setAttribute('value', customLocationName)
-    customLocationNameElement.setAttribute('oninput', `mods[${i}].content.CustomLocations[${j}].name = this.value; updateData();`)
+    customLocationNameElement.setAttribute('oninput', `mods[${i}].content.CustomLocations[${j}].Name = this.value; updateData();`)
     customLocationNameElement.setAttribute('spellcheck', 'false')
     customLocationNameElement.classList.add('invisinput')
 
@@ -182,6 +223,8 @@ function addCustomLocationElem(customLocation, j, i) {
         option.innerHTML = asset
         assetDropdown.appendChild(option)
     }
+    customLocation.FromMapFile = 'assets/' + assetDropdown.value
+
     customLocationItem.appendChild(assetDropdown)
     customLocationList.appendChild(customLocationItem)
     
@@ -193,6 +236,61 @@ function addCustomLocationElem(customLocation, j, i) {
     //assetDropdown.value = customLocation.FromMapFile.split('/').pop()
     let optiontoselect = assetDropdown.querySelector(`option[value="${customLocation.FromMapFile.split('/').pop()}"]`)
     if (optiontoselect) 
+        optiontoselect.setAttribute('selected', 'selected')
+}
+
+function addEditImageChangeElem(editImageChange, j, i) {
+    let editImageChangeItem = document.createElement('div')
+    let editImageChangeTarget = editImageChange.Target
+    let mod = mods[i]
+    let changeList = document.querySelector('#changes')
+
+    let changeDropdown = document.createElement('select')
+    changeDropdown.classList.add('changeDropdown')
+    changeDropdown.setAttribute('data-index', j)
+    changeDropdown.setAttribute('onchange', `mods[${i}].content.Changes[${j}].Target = this.value; updateData(); console.log(this)`)
+
+    defaultOption = document.createElement('option')
+    defaultOption.value = editImageChangeTarget
+    defaultOption.innerHTML = editImageChangeTarget
+    changeDropdown.appendChild(defaultOption)
+
+    //add Craftables target
+    craftablesOption = document.createElement('option')
+    craftablesOption.value = 'TileSheets/Craftables'
+    craftablesOption.innerHTML = 'TileSheets/Craftables'
+    changeDropdown.appendChild(craftablesOption)
+    
+    //add springobjects target
+    springObjectsOption = document.createElement('option')
+    springObjectsOption.value = 'Maps/springobjects'
+    springObjectsOption.innerHTML = 'Maps/springobjects'
+    changeDropdown.appendChild(springObjectsOption)
+
+    editImageChangeItem.appendChild(changeDropdown)
+
+    let assetDropdown = document.createElement('select')
+    assetDropdown.setAttribute('data-index', j)
+    assetDropdown.classList.add('assetDropdown')
+    assetDropdown.setAttribute('onchange', `mods[${i}].content.Changes[${j}].FromFile = 'assets/' + this.value; updateData(); console.log(this)`)
+    for (const asset of mod.assets.filter(a => a.endsWith('.png'))) {
+        console.log(asset)
+        let option = document.createElement('option')
+        option.value = asset
+        option.innerHTML = asset
+        assetDropdown.appendChild(option)
+    }
+    editImageChange.FromFile = 'assets/' + assetDropdown.value
+    editImageChangeItem.appendChild(assetDropdown)
+    changeList.appendChild(editImageChangeItem)
+
+    console.log(editImageChange.FromFile.split('/').pop())
+    assetDropdown.value = editImageChange.FromFile.split('/').pop()
+    console.log(assetDropdown.value, assetDropdown)
+
+    //get the option that matches the value
+    let optiontoselect = assetDropdown.querySelector(`option[value="${editImageChange.FromFile.split('/').pop()}]`)
+    if (optiontoselect)
         optiontoselect.setAttribute('selected', 'selected')
 }
 
